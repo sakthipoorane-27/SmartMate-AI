@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SmartMate AI ✨</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root{
+ --bg:#020814;
+ --card:rgba(255,255,255,.08);
+ --text:#eaffff;
+ --accent:#00ffe0;
+ --nav:#050d1f;
+}
+.light{
+ --bg:#f4f6fb;
+ --card:#ffffff;
+ --text:#001818;
+ --accent:#0077ff;
+ --nav:#e8ecf3;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+body{min-height:100vh;background:var(--bg);color:var(--text);display:flex;transition:.4s;}
+.sidebar{width:210px;background:var(--nav);padding:20px 10px;display:flex;flex-direction:column;gap:10px;}
+.sidebar h2{color:var(--accent);text-align:center}
+.nav-item{padding:10px;border-radius:10px;cursor:pointer;}
+.nav-item:hover,.nav-item.active{background:rgba(0,255,224,.18);}
+.main{flex:1;display:flex;justify-content:center;align-items:flex-start;}
+.app{max-width:500px;width:100%;padding:16px;}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.toggle{cursor:pointer;font-size:20px}
+.card{background:var(--card);padding:20px;border-radius:22px;box-shadow:0 0 30px rgba(0,0,0,.4);animation:fade .4s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(15px)} to{opacity:1}}
+.hide{display:none}
+h1,h2{text-align:center;color:var(--accent)}
+#welcome{text-align:center;opacity:.8;margin-bottom:8px}
+input,select,button{width:100%;padding:12px;margin:6px 0;border:none;border-radius:12px;font-size:15px;}
+input,select{background:rgba(0,0,0,.3);color:var(--text)}
+button{background:linear-gradient(135deg,var(--accent),#00bfa5);font-weight:bold;cursor:pointer;}
+.reset{background:#ff4d4d}
+.bar{height:10px;background:#222;border-radius:10px;overflow:hidden;margin-top:12px}
+.fill{height:100%;width:0;transition:1s;border-radius:10px}
+canvas{width:100%;height:180px;background:rgba(0,0,0,.25);border-radius:14px;margin-top:12px;}
+li{list-style:none;background:rgba(0,255,224,.12);margin:6px 0;padding:8px;border-radius:10px;}
+.check{display:flex;align-items:center;gap:10px;background:rgba(0,255,224,.12);padding:8px;border-radius:10px;margin:6px 0;}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;justify-content:center;}
+.badge{padding:6px 10px;border-radius:14px;font-size:13px;background:rgba(255,255,255,.15);}
+.unlocked{background:linear-gradient(135deg,#ffd700,#ff9f00);color:#000;}
+@media(max-width:720px){body{flex-direction:column}.sidebar{flex-direction:row;width:100%;justify-content:space-around}}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+<h2>SmartMate</h2>
+<div class="nav-item active" onclick="nav(profilePage,this)">👤 Profile</div>
+<div class="nav-item" onclick="nav(inputPage,this)">📝 Daily</div>
+<div class="nav-item" onclick="nav(healthPage,this)">💧 Health</div>
+<div class="nav-item" onclick="nav(challengePage,this)">✅ Challenges</div>
+<div class="nav-item" onclick="nav(motivationPage,this)">💬 Motive</div>
+<div class="nav-item" onclick="nav(analyticsPage,this)">📊 Stats</div>
+<div class="nav-item" onclick="nav(weeklyPage,this)">📅 Weekly</div>
+<div class="nav-item" onclick="nav(marksPage,this)">📘 Marks Planner</div>
+<div class="nav-item" onclick="nav(reminderPage,this)">⏰ Reminders</div>
+</div>
+
+<div class="main">
+<div class="app">
+
+<div class="top">
+<span id="clock"></span>
+<span class="toggle" onclick="toggleTheme()">🌙</span>
+</div>
+
+<h1>✨ SmartMate AI ✨</h1>
+<h2>Digital Twin of Students</h2>
+<p id="welcome"></p>
+
+<!-- PROFILE -->
+<div id="profilePage" class="card">
+<input id="username" placeholder="Enter your name">
+<input id="age" placeholder="Enter your age">
+<input id="target" placeholder="Target marks %">
+<button onclick="saveProfile()">Start Journey 🚀</button>
+</div>
+
+<!-- DAILY -->
+<div id="inputPage" class="card hide">
+<input id="attendance" placeholder="Attendance %">
+<input id="marks" placeholder="Marks %">
+<input id="sleep" placeholder="Sleep hours">
+<select id="emotion">
+<option value="happy">😄 Happy</option>
+<option value="sad">😢 Sad</option>
+<option value="tired">😴 Tired</option>
+<option value="stressed">😖 Stressed</option>
+<option value="lazy">😪 Lazy</option>
+</select>
+<button onclick="analyze()">Analyze</button>
+</div>
+
+<!-- HEALTH -->
+<div id="healthPage" class="card hide">
+<h2>Hydration & Sleep</h2>
+<input id="water" placeholder="Water glasses">
+<input id="sleepHealth" placeholder="Sleep hours">
+<button onclick="saveHealth()">Save</button>
+<p id="healthResult"></p>
+</div>
+
+<!-- CHALLENGES -->
+<div id="challengePage" class="card hide">
+<h2>Daily Challenges</h2>
+<div id="checks"></div>
+<p id="progress"></p>
+<h2>🏆 Rewards</h2>
+<div id="badges" class="badges"></div>
+</div>
+
+<!-- MOTIVATION -->
+<div id="motivationPage" class="card hide">
+<h2>AI Motivation</h2>
+<p id="motivation"></p>
+<p id="advice"></p>
+<p id="emotionMotivation"></p>
+</div>
+
+<!-- ANALYTICS -->
+<div id="analyticsPage" class="card hide">
+<h2>Analytics</h2>
+<p>Overall Progress:</p>
+<div class="bar"><div id="avgFill" class="fill"></div></div>
+<p id="avgText"></p>
+
+<p>Daily vs Weekly:</p>
+<div class="bar"><div id="dailyFill" class="fill"></div></div>
+<p id="dailyText"></p>
+<div class="bar"><div id="weeklyFill" class="fill"></div></div>
+<p id="weeklyTextAnalytics"></p>
+
+<canvas id="trend"></canvas>
+<ul id="timeline"></ul>
+<button onclick="showWeekly()">Weekly</button>
+<button class="reset" onclick="resetAll()">Reset</button>
+</div>
+
+<!-- WEEKLY -->
+<div id="weeklyPage" class="card hide">
+<h2>Weekly Report</h2>
+<p id="weeklyText"></p>
+<canvas id="weeklyTrend" style="height:200px;"></canvas>
+<button onclick="nextDay()">Next Day ▶️</button>
+</div>
+
+<!-- MARKS PLANNER -->
+<div id="marksPage" class="card hide">
+<h2>📘 Subject Marks Entry</h2>
+<input id="sub1name" placeholder="Subject 1 Name">
+<input id="sub1" type="number" placeholder="Subject 1 Marks">
+<input id="sub2name" placeholder="Subject 2 Name">
+<input id="sub2" type="number" placeholder="Subject 2 Marks">
+<input id="sub3name" placeholder="Subject 3 Name">
+<input id="sub3" type="number" placeholder="Subject 3 Marks">
+<input id="sub4name" placeholder="Subject 4 Name">
+<input id="sub4" type="number" placeholder="Subject 4 Marks">
+<input id="sub5name" placeholder="Subject 5 Name">
+<input id="sub5" type="number" placeholder="Subject 5 Marks">
+<input id="sub6name" placeholder="Subject 6 Name">
+<input id="sub6" type="number" placeholder="Subject 6 Marks">
+<button onclick="analyzeMarks()">Generate Study Plan 🤖</button>
+<p id="marksResult"></p>
+<ul id="studyPlan"></ul>
+</div>
+
+<!-- REMINDERS -->
+<div id="reminderPage" class="card hide">
+<h2>Reminders / Tasks</h2>
+<div id="reminderGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+<input id="newTask" placeholder="Enter new task">
+<button onclick="addTask()">Add Task ➕</button>
+<button class="reset" onclick="clearTasks()">Clear All 🗑️</button>
+</div>
+
+</div>
+</div>
+
+<script>
+// Pages & Navigation
+const pages=[profilePage,inputPage,healthPage,challengePage,motivationPage,analyticsPage,weeklyPage,marksPage,reminderPage];
+const navItems=document.querySelectorAll('.nav-item');
+function nav(page,el){
+ pages.forEach(p=>p.classList.add("hide"));
+ page.classList.remove("hide");
+ navItems.forEach(n=>n.classList.remove("active"));
+ if(el) el.classList.add("active");
+
+ if(page===challengePage) loadChallenges();
+ if(page===healthPage) loadHealth();
+ if(page===analyticsPage) renderAnalytics();
+ if(page===weeklyPage) requestAnimationFrame(drawWeeklyChart);
+ if(page===reminderPage) loadReminders();
+}
+
+/* PROFILE */
+function saveProfile(){
+ if(!username.value.trim()) return alert("Enter name");
+ localStorage.setItem("user",username.value);
+ localStorage.setItem("target",target.value||75);
+ welcome.innerText=`Welcome, ${username.value} 💙`;
+ nav(inputPage,navItems[1]);
+}
+
+/* DAILY / MOTIVATION */
+function analyze(){
+ let a=+attendance.value||0, m=+marks.value||0, s=+sleep.value||0, e=emotion.value;
+ let score=Math.min(Math.round(a*0.4+m*0.4+s*2),100);
+ let history=JSON.parse(localStorage.getItem("history"))||[];
+ let day=history.length+1;
+ history.push({day,value:score,emotion:e});
+ localStorage.setItem("history",JSON.stringify(history));
+ localStorage.setItem("dayCount",day);
+
+ const avgScore=Math.round(history.reduce((a,b)=>a+b.value,0)/history.length);
+ const level=getStudentLevel(avgScore), avatar=getAvatar(level), burnout=detectBurnout();
+ motivation.innerText=`${avatar} Your score: ${score}% | Level: ${level}`;
+ advice.innerText=smartAdvice(a,m,s)+"\n"+burnout;
+ emotionMotivation.innerText=emotionParagraph(e);
+ nav(motivationPage,navItems[4]);
+}
+
+function smartAdvice(a,m,s){
+ if(a<75) return "📚 Attendance low. Try to attend more classes.";
+ if(s<6) return "😴 Low Sleep. Try to get 7-8 hours of sleep.";
+ if(m<50) return "🧠 Low marks. Focus to study more consistently.";
+ return "🔥 Excellent balance!";
+}
+function emotionParagraph(e){
+ return {
+  happy:"😄 You are in a positive state of mind today. Your energy and confidence are your biggest strengths. Use this energy to tackle your goals. Stay consistent even when things feel easy. Keep smiling and keep moving forward.",
+  sad:"😢 Tough days pass. It's okay to feel down sometimes. Take care of yourself and remember that better days are ahead. Be kind to yourself. You are stronger than you think",
+  tired:"😴 Your body is asking for rest. Rest today, rise tomorrow. Recharge without guilt. Even rest is part of productivity. Balance leads to better performance.",
+  stressed:"😖 Stress means you care about your goals. Slow down and focus one step at a time. You don't need to solve everything today. You are capable of handling this.",
+  lazy:"😪 Start with a small task today. Momentum builds faster than you think. Action builds energy. Don't wait to feel ready. Discipline beats motivation on hard days. Begin now, even imperfectly."
+ }[e];
+}
+
+
+/* HEALTH */
+function saveHealth(){ localStorage.setItem("health",JSON.stringify({water:+water.value||0,sleep:+sleepHealth.value||0})); loadHealth(); }
+function loadHealth(){ const h=JSON.parse(localStorage.getItem("health"))||{}; if(h.water||h.sleep){ const score=Math.round(Math.min(h.water/8,1)*50+Math.min(h.sleep/8,1)*50); healthResult.innerText=`Health Score: ${score}%`; } }
+
+/* CHALLENGES */
+const challengeList=["💧 Drink water","😴 Sleep well","📚 Study","🧘 Break","🚶 Walk"];
+const badgeRules=[{label:"🥉 Bronze",cond:c=>c>=1},{label:"🥈 Silver",cond:c=>c>=3},{label:"🥇 Gold",cond:c=>c===5}];
+const today=new Date().toDateString();
+if(localStorage.getItem("challengeDate")!==today){ localStorage.setItem("challengeDate",today); localStorage.removeItem("challenges"); }
+function loadChallenges(){ checks.innerHTML=""; const state=JSON.parse(localStorage.getItem("challenges"))||[]; challengeList.forEach((c,i)=>{ checks.innerHTML+=`<div class="check"><input type="checkbox" ${state[i]?"checked":""} onchange="toggleChallenge(${i})"> ${c}</div>` }); updateProgress(); }
+function toggleChallenge(i){ const state=JSON.parse(localStorage.getItem("challenges"))||[]; state[i]=!state[i]; localStorage.setItem("challenges",JSON.stringify(state)); updateProgress(); }
+function updateProgress(){ const state=JSON.parse(localStorage.getItem("challenges"))||[]; const done=state.filter(Boolean).length; progress.innerText=`Completed: ${done}/5`; badges.innerHTML=""; badgeRules.forEach(b=>{ badges.innerHTML+=`<div class="badge ${b.cond(done)?"unlocked":""}">${b.label}</div>`; }); }
+
+/* ANALYTICS */
+function renderAnalytics(){
+ const h = JSON.parse(localStorage.getItem("history")) || [];
+ timeline.innerHTML = "";
+ h.forEach(d => timeline.innerHTML += `<li>Day ${d.day}: ${d.value}%</li>`);
+
+ const avg = Math.round(h.reduce((a,b)=>a+b.value,0)/(h.length||1));
+ avgFill.style.width = avg + "%";
+ avgFill.style.background = avg < 50 ? "#ff4d4d" : avg < 75 ? "#ffdd57" : "#4caf50";
+ avgText.innerText = `Overall Avg: ${avg}% | Level: ${getStudentLevel(avg)}`;
+
+ const todayScore = h.length ? h[h.length-1].value : 0;
+ const last7 = h.slice(-7); 
+ const weeklyAvg = last7.length ? Math.round(last7.reduce((a,b)=>a+b.value,0)/last7.length) : 0;
+
+ dailyFill.style.width = todayScore + "%";
+ dailyFill.style.background = todayScore < 50 ? "#ff4d4d" : todayScore < 75 ? "#ffdd57" : "#4caf50";
+ dailyText.innerText = `Today: ${todayScore}%`;
+
+ weeklyFill.style.width = weeklyAvg + "%";
+ weeklyFill.style.background = weeklyAvg < 50 ? "#ff4d4d" : weeklyAvg < 75 ? "#ffdd57" : "#4caf50";
+ weeklyTextAnalytics.innerText = `Last 7 Days Avg: ${weeklyAvg}%`;
+
+ drawGraph(h);
+}
+
+function drawGraph(history){
+ const canvas = document.getElementById("trend");
+ if(!canvas) return;
+ const ctx = canvas.getContext("2d");
+ canvas.width = canvas.offsetWidth;
+ canvas.height = canvas.offsetHeight;
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ if(history.length===0) return;
+
+ const padding = 20;
+ const w = canvas.width - padding*2;
+ const hght = canvas.height - padding*2;
+ const barWidth = w / history.length - 10;
+
+ history.forEach((d,i) => {
+   const x = padding + i*(barWidth+10);
+   const barHeight = (d.value/100) * hght;
+   const y = canvas.height - padding - barHeight;
+
+   let color = d.value < 50 ? "#ff4d4d" : d.value < 75 ? "#ffdd57" : "#4caf50";
+   ctx.fillStyle = color;
+   ctx.fillRect(x,y,barWidth,barHeight);
+
+   ctx.fillStyle = "#fff";
+   ctx.font = "12px sans-serif";
+   ctx.textAlign = "center";
+   ctx.fillText(`D${d.day}`, x+barWidth/2, canvas.height-padding+14);
+ });
+}
+
+/* WEEKLY REPORT */
+function showWeekly(){
+ const h = JSON.parse(localStorage.getItem("history")) || [];
+ if(h.length===0){ weeklyText.innerText="No data yet."; return; }
+ const last7 = h.slice(-7);
+ const avg = Math.round(last7.reduce((a,b)=>a+b.value,0)/last7.length);
+ const targetMark = +localStorage.getItem("target")||75;
+ const gap = Math.max(0,targetMark-avg);
+ const level = getStudentLevel(avg);
+ const avatar = getAvatar(avg);
+ weeklyText.innerText = `${avatar} Days Tracked: ${last7.length}\nWeekly Avg: ${avg}% | Level: ${level}\nGap to Target: ${gap}%`;
+ nav(weeklyPage,navItems[6]);
+ requestAnimationFrame(drawWeeklyChart);
+}
+
+/* WEEKLY CHART */
+function drawWeeklyChart(){
+ const h = JSON.parse(localStorage.getItem("history")) || [];
+ const last7 = h.slice(-7);
+ const canvas=document.getElementById("weeklyTrend");
+ if(!canvas) return;
+ canvas.width=canvas.offsetWidth; canvas.height=canvas.offsetHeight;
+ const ctx=canvas.getContext("2d"); ctx.clearRect(0,0,canvas.width,canvas.height);
+ if(last7.length===0) return;
+ const padding=20; const w=canvas.width-padding*2; const hght=canvas.height-padding*2; const barWidth=w/last7.length-10;
+ last7.forEach((d,i)=>{
+  const x=padding+i*(barWidth+10); const barHeight=(d.value/100)*hght; const y=canvas.height-padding-barHeight;
+  let color=d.value<50?"#ff4d4d":d.value<75?"#ffdd57":"#4caf50";
+  ctx.fillStyle=color; ctx.fillRect(x,y,barWidth,barHeight);
+  ctx.fillStyle="#fff"; ctx.font="12px sans-serif"; ctx.textAlign="center";
+  ctx.fillText(`D${d.day}`,x+barWidth/2,canvas.height-padding+14);
+ });
+}
+
+/* MARKS PLANNER */
+function analyzeMarks(){    
+ const subjects=[{name:sub1name.value||"Subject 1", mark:+sub1.value||0},{name:sub2name.value||"Subject 2", mark:+sub2.value||0},{name:sub3name.value||"Subject 3", mark:+sub3.value||0},{name:sub4name.value||"Subject 4", mark:+sub4.value||0},{name:sub5name.value||"Subject 5", mark:+sub5.value||0},{name:sub6name.value||"Subject 6", mark:+sub6.value||0}];
+ if(subjects.some(s=>s.mark<0||s.mark>100)) return alert("Marks 0-100 only");
+ const total=subjects.reduce((a,b)=>a+b.mark,0);
+ const avg=Math.round(total/subjects.length);
+ marksResult.innerText=`Total: ${total} | Avg: ${avg}%`;
+ studyPlan.innerHTML="";
+ subjects.forEach(s=>{ let msg=s.mark<50?"2 hrs/day (Weak)":s.mark<70?"1.5 hrs/day":"45 mins revision"; studyPlan.innerHTML+=`<li>${s.name} → ${msg}</li>`; });
+}
+
+/* NEXT DAY */
+function nextDay(){
+ let a=+attendance.value||0, m=+marks.value||0, s=+sleep.value||0, e=emotion.value;
+ if(a||m||s){
+     let score=Math.min(Math.round(a*0.4+m*0.4+s*2),100);
+     let history=JSON.parse(localStorage.getItem("history"))||[];
+     let day=history.length+1;
+     history.push({day,value:score,emotion:e});
+     localStorage.setItem("history",JSON.stringify(history));
+     localStorage.setItem("dayCount",day);
+ }
+ attendance.value=""; marks.value=""; sleep.value=""; emotion.value="happy";
+ nav(inputPage,navItems[1]);
+}
+
+/* THEME + CLOCK */
+function toggleTheme(){ document.body.classList.toggle("light"); localStorage.setItem("theme",document.body.classList.contains("light")); }
+if(localStorage.getItem("theme")==="true") document.body.classList.add("light");
+setInterval(()=>clock.innerText=new Date().toLocaleTimeString(),1000);
+
+/* RESET */
+function resetAll(){ if(confirm("Reset everything?")){ localStorage.clear(); location.reload(); } }
+
+const user=localStorage.getItem("user");
+if(user){ welcome.innerText=`Welcome back, ${user} 💙`; nav(inputPage,navItems[1]); }
+
+/* STUDENT LEVELS & AVATAR */
+function getStudentLevel(avg){ if(avg<50)return"Beginner";if(avg<65)return"Learner";if(avg<80)return"Improver";if(avg<90)return"Achiever";return"Pro Student"; }
+function getAvatar(level){ const avatars={"Beginner":"🟢","Learner":"🔵","Improver":"🟡","Achiever":"🟠","Pro Student":"⭐"}; return avatars[level]||"🟢"; }
+
+/* BURNOUT */
+function detectBurnout(){ const h=JSON.parse(localStorage.getItem("history"))||[]; if(h.length===0)return"No data yet."; const last3=h.slice(-3); const avg=last3.reduce((a,b)=>a+b.value,0)/last3.length; if(avg<50)return"⚠️ Overworked!"; else if(avg<70)return"😓 Slight burnout"; else if(avg>=70&&last3.some(d=>d.emotion==="tired"||d.emotion==="stressed"))return"😴 Watch stress"; else return"💪 Healthy rhythm!"; }
+
+/* REMINDERS */
+function loadReminders(){ const tasks=JSON.parse(localStorage.getItem("tasks"))||[]; reminderGrid.innerHTML=""; tasks.forEach((t,i)=>{ addReminderRow(t.text,t.done,i); }); }
+function addReminderRow(text,done,index){ const div=document.createElement("div"); div.className="check"; div.innerHTML=`<span style="flex:1;text-decoration:${done?"line-through":"none"}">${text}</span>`; div.onclick=()=>{ const tasks=JSON.parse(localStorage.getItem("tasks"))||[]; tasks[index].done=!tasks[index].done; localStorage.setItem("tasks",JSON.stringify(tasks)); loadReminders(); }; reminderGrid.appendChild(div); }
+function addTask(){ const val=newTask.value.trim(); if(!val)return; const tasks=JSON.parse(localStorage.getItem("tasks"))||[]; tasks.push({text:val,done:false}); localStorage.setItem("tasks",JSON.stringify(tasks)); newTask.value=""; loadReminders(); }
+function clearTasks(){ if(confirm("Clear all tasks?")){ localStorage.removeItem("tasks"); loadReminders(); } }
+</script>
+</body>
+</html>
